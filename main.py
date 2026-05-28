@@ -825,6 +825,8 @@ class ImbotPlugin(Star):
         eng = self.engine
 
         if "memory" in msg:
+            if not eng.memory:
+                return "记忆系统未启用。"
             data = {
                 "_schema": f"{SCHEMA_MEMORY}_v{MEMORY_SCHEMA_VERSION}",
                 "_exported_at": datetime.now().isoformat(),
@@ -840,6 +842,8 @@ class ImbotPlugin(Star):
             return f"已导出到 data/exports/memory_{ts}.json"
 
         elif "social" in msg:
+            if not eng.social_world:
+                return "社交系统未启用。"
             data = eng.social_world.to_dict()
             data["_schema"] = f"{SCHEMA_SOCIAL}_v{SOCIAL_SCHEMA_VERSION}"
             data["_exported_at"] = datetime.now().isoformat()
@@ -950,7 +954,7 @@ class ImbotPlugin(Star):
             if ver > MEMORY_SCHEMA_VERSION:
                 return f"导出文件版本(v{ver})高于当前版本(v{MEMORY_SCHEMA_VERSION})，无法导入。"
             # 备份
-            mem_path = os.path.join(plugin_dir, "data", "memory.json")
+            mem_path = os.path.join(eng.data_dir, "memory.json")
             if os.path.exists(mem_path):
                 import shutil
                 shutil.copy(mem_path, os.path.join(backup_dir, "memory.json"))
@@ -971,7 +975,7 @@ class ImbotPlugin(Star):
             ver = parse_version(data.get("_schema", ""))
             if ver > SOCIAL_SCHEMA_VERSION:
                 return f"导出文件版本(v{ver})高于当前版本(v{SOCIAL_SCHEMA_VERSION})，无法导入。"
-            sw_path = os.path.join(plugin_dir, "data", "social_world.json")
+            sw_path = os.path.join(eng.data_dir, "social_world.json")
             if os.path.exists(sw_path):
                 import shutil
                 shutil.copy(sw_path, os.path.join(backup_dir, "social_world.json"))
