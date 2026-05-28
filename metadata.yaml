@@ -2,8 +2,8 @@ name: imbot
 author: imbot_dev
 desc: "寄居于你电脑里的存在——有脾气、有记忆、活在时间里"
 short_desc: "有脾气、有记忆、活在时间里的 AI 室友"
-version: "0.2.0"
-repo: ""
+version: "1.0.0"
+repo: "https://github.com/lazybone404/imbot"
 support_platforms:
   - aiocqhttp
 
