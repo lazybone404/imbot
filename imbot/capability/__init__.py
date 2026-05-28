@@ -67,8 +67,7 @@ class WillingnessEvaluator:
 
 
 class CapabilityManager:
-    def __init__(self, config):
-        self.config = config
+    def __init__(self):
         self.evaluator = WillingnessEvaluator()
         self._help_count: dict[str, int] = {}  # {user_id: 近期帮助次数}
         self._last_help_time: dict[str, float] = {}

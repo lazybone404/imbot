@@ -138,12 +138,6 @@ output_segmentation:
   scene_overrides:
     group_chat_enabled: false
 
-capability:
-  operations:
-    open_program: true
-    note: true
-  willingness_enabled: true
-
 speaking_style:
   enabled: true
   verbosity: "normal"

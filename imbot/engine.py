@@ -145,7 +145,7 @@ class CoreEngine:
         self._tasks.append(asyncio.create_task(self.perception.loop(self)))
 
         # 能力层
-        self.capability = CapabilityManager(self.config)
+        self.capability = CapabilityManager()
 
         # 秘书模型
         self.secretary = Secretary(self.config.secretary) if self.config.group_chat.enabled else None

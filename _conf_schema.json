@@ -628,30 +628,6 @@
       }
     }
   },
-  "capability": {
-    "description": "🔧 她能做什么",
-    "type": "object",
-    "hint": "她有能力操作你的电脑。是否允许、以及她帮不帮，看心情。",
-    "items": {
-      "willingness_enabled": {
-        "description": "帮不帮看心情",
-        "type": "bool",
-        "default": true,
-        "hint": "关闭后她来者不拒，打开后她会根据对你的熟悉度和自己的情绪决定帮不帮"
-      },
-      "open_program": {
-        "description": "帮你打开软件",
-        "type": "bool",
-        "default": true,
-        "hint": "只允许白名单内的安全程序"
-      },
-      "note": {
-        "description": "帮你记便签",
-        "type": "bool",
-        "default": true
-      }
-    }
-  },
   "memory": {
     "description": "🧠 私聊记忆",
     "type": "object",

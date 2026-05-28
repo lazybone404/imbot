@@ -246,12 +246,6 @@ class ProactiveConfig:
     heartbeat: ProactiveHeartbeatConfig = field(default_factory=ProactiveHeartbeatConfig)
 
 
-@dataclass(frozen=True)
-class CapabilityConfig:
-    open_program: bool = True
-    note: bool = True
-    willingness_enabled: bool = True
-
 
 @dataclass(frozen=True)
 class PromptsConfig:
@@ -288,7 +282,6 @@ class ImbotConfig:
     perception: PerceptionConfig = field(default_factory=PerceptionConfig)
     social_world: SocialWorldConfig = field(default_factory=SocialWorldConfig)
     output_segmentation: SegmentationConfig = field(default_factory=SegmentationConfig)
-    capability: CapabilityConfig = field(default_factory=CapabilityConfig)
     proactive: ProactiveConfig = field(default_factory=ProactiveConfig)
     speaking_style: SpeakingStyleConfig = field(default_factory=SpeakingStyleConfig)
     custom_rules: tuple = ()
@@ -322,11 +315,6 @@ class ImbotConfig:
             ),
             social_world=SocialWorldConfig(**data.get("social_world", {})),
             output_segmentation=SegmentationConfig.from_dict(data.get("output_segmentation", {})),
-            capability=CapabilityConfig(**{
-                **data.get("capability", {}).get("operations", data.get("capability", {})),
-                **{k: v for k, v in data.get("capability", {}).items()
-                   if k != "operations"},
-            }),
             proactive=ProactiveConfig(
                 **{k: v for k, v in data.get("proactive", {}).items()
                    if k not in ("triggers", "heartbeat")},
