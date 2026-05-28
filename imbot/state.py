@@ -3,6 +3,8 @@ import os
 import time
 from pathlib import Path
 
+from imbot.utils import atomic_write_json
+
 MOODS = ("安静", "低落", "烦躁", "好奇", "开心", "疲惫")
 STAGES = ("初识", "熟识", "亲近", "深层", "羁绊")
 THRESHOLDS = (0, 5, 20, 50, 100)
@@ -141,8 +143,7 @@ class RuntimeState:
     def save(self) -> None:
         try:
             os.makedirs(os.path.dirname(self._path), exist_ok=True)
-            with open(self._path, "w", encoding="utf-8") as f:
-                json.dump(self.to_dict(), f, ensure_ascii=False, indent=2)
+            atomic_write_json(self._path, self.to_dict())
         except OSError:
             pass
 

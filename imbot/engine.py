@@ -344,7 +344,7 @@ class CoreEngine:
             f"私聊记忆: {len(self.memory.entries) if self.memory else 0} 条",
             f"熟悉度记录: {len(self.state.familiar_count)} 人",
             f"社交世界: {len(sw.people)} 人",
-            f"记忆召回: {self.memory._recall_hits}/{self.memory._recall_total}",
+            f"记忆召回: {self.memory._recall_hits if self.memory else 0}/{self.memory._recall_total if self.memory else 0}",
             f"感知: {self._current_perception.get('jun_attention', '无')}",
             f"熬夜: 连续{self.perception.late_night.streak if self.perception and self.perception.late_night else 0}天",
         ]

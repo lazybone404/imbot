@@ -1,6 +1,7 @@
 """共享工具：时间语境 + LLM JSON 解析 + 轻量调用。"""
 import asyncio
 import json as _json
+import os
 import time as _time
 from datetime import datetime
 
@@ -91,6 +92,14 @@ def parse_llm_json(text: str) -> dict | None:
         return _json.loads(clean)
     except Exception:
         return None
+
+
+def atomic_write_json(path: str, data) -> None:
+    """原子写入 JSON：先写临时文件，再 os.replace 到目标路径，防止崩溃丢数据。"""
+    tmp = path + ".tmp"
+    with open(tmp, "w", encoding="utf-8") as f:
+        _json.dump(data, f, ensure_ascii=False, indent=2)
+    os.replace(tmp, path)
 
 
 async def call_lightweight_llm(engine, prompt: str, timeout: float = 5.0) -> str:

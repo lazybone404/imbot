@@ -7,6 +7,8 @@ import os
 import random
 import time
 
+from imbot.utils import atomic_write_json
+
 
 class InterestPool:
     def __init__(self, config, data_dir: str) -> None:
@@ -55,8 +57,7 @@ class InterestPool:
     def save(self) -> None:
         try:
             os.makedirs(self._data_dir, exist_ok=True)
-            with open(self._path, "w", encoding="utf-8") as f:
-                json.dump({"interests": self.interests}, f, ensure_ascii=False, indent=2)
+            atomic_write_json(self._path, {"interests": self.interests})
         except Exception:
             from astrbot.api import logger
             logger.error("兴趣池写入失败", exc_info=True)

@@ -3,6 +3,8 @@ import os
 import time
 from dataclasses import dataclass, field, asdict
 
+from imbot.utils import atomic_write_json
+
 
 RELATIONSHIP_TYPES = (
     "close_friend", "casual_friend", "authority", "subordinate",
@@ -238,8 +240,7 @@ class SocialWorld:
     def save(self):
         try:
             os.makedirs(os.path.dirname(self._path), exist_ok=True)
-            with open(self._path, "w", encoding="utf-8") as f:
-                json.dump(self.to_dict(), f, ensure_ascii=False, indent=2)
+            atomic_write_json(self._path, self.to_dict())
         except OSError:
             pass
 

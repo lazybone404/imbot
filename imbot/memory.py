@@ -7,7 +7,7 @@ import time
 from datetime import datetime, timedelta
 
 
-from imbot.utils import calc_time_feel, days_since
+from imbot.utils import atomic_write_json, calc_time_feel, days_since
 
 RECALL_PATTERNS = [
     "你记得{seed}",
@@ -493,15 +493,14 @@ class MemoryManager:
     def save(self):
         try:
             os.makedirs(os.path.dirname(self._path), exist_ok=True)
-            with open(self._path, "w", encoding="utf-8") as f:
-                json.dump({
-                    "entries": self.entries,
-                    "deep_entries": self.deep_entries,
-                    "emotion_residues": self.emotion_residues,
-                    "last_write_time": self._last_write_time,
-                    "recall_hits": self._recall_hits,
-                    "recall_total": self._recall_total,
-                }, f, ensure_ascii=False, indent=2)
+            atomic_write_json(self._path, {
+                "entries": self.entries,
+                "deep_entries": self.deep_entries,
+                "emotion_residues": self.emotion_residues,
+                "last_write_time": self._last_write_time,
+                "recall_hits": self._recall_hits,
+                "recall_total": self._recall_total,
+            })
         except OSError:
             pass
 

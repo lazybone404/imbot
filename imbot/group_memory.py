@@ -2,7 +2,7 @@ import json
 import os
 from datetime import datetime, timedelta
 
-from imbot.utils import calc_time_feel, days_since
+from imbot.utils import atomic_write_json, calc_time_feel, days_since
 
 
 class GroupMemoryManager:
@@ -103,8 +103,7 @@ class GroupMemoryManager:
             return
         try:
             os.makedirs(self._base_dir, exist_ok=True)
-            with open(self._path(group_id), "w", encoding="utf-8") as f:
-                json.dump(self._caches[group_id], f, ensure_ascii=False, indent=2)
+            atomic_write_json(self._path(group_id), self._caches[group_id])
         except OSError:
             pass
 
