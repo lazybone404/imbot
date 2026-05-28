@@ -1,0 +1,194 @@
+owner:
+  qq_id: ""
+
+core:
+  inject_rules: true
+  use_own_memory: true
+
+familiarity:
+  stages: ["初识", "熟识", "亲近", "深层", "羁绊"]
+  thresholds: [0, 5, 20, 50, 100]
+  owner_baseline: "熟识"
+
+memory:
+  max_entries: 150
+  base_decay_rate: 0.02
+  deep_pool_size: 500
+  core_limit: 5
+  owner_decay_mult: 1.5
+  owner_retrieval_bonus: 1.0
+  owner_core_limit: 3
+  decay_rates:
+    event: 0.02
+    impression: 0.01
+    emotion: 0.025
+  intensity_decay_mod: 0.5
+  negative_emotion_mod: 0.7
+  consolidation: true
+  mood_congruence_bonus: 1.5
+  output_diversity: true
+  tot_enabled: true
+  emotion_residue: true
+  allow_user_correction: true
+
+group_memory:
+  max_entries: 30
+  base_decay_rate: 0.03
+
+perception:
+  enabled: true
+  interval: 300
+  idle: true
+  late_night_tracking: true
+  process: true
+  media: true
+  session_duration:
+    enabled: true
+    long_threshold: 4
+  self_awareness:
+    enabled: true
+  steam:
+    enabled: false
+    api_key: "$SECRET:steam.api_key"
+    steam_id: ""
+    poll_interval: 300
+    proxy: ""
+    timeout: 15
+    expose:
+      current_game: true
+      rich_presence: false
+      playtime_session: true
+      recently_played: true
+      achievements: false
+
+group_chat:
+  enabled: true
+  proactive_in_group: false
+  proactive_level: "克制"
+
+proactive:
+  enabled: false
+  min_interval: 15
+  max_per_3h: 3
+  window_hours: 3
+  base_probability: 0.3
+  silence_after_ignored: 3
+  quiet_mode_duration: 30
+  tendency: "natural"
+  custom_hint: ""
+  known_min_interval: 120
+  known_max_per_day: 1
+  allow_known_targets: false
+  triggers:
+    long_silence_hours: 6
+    late_night: true
+    late_night_start: 0
+    late_night_end: 5
+    user_returned: true
+    game_ended: true
+    late_night_music: true
+    long_session: true
+    long_session_hours: 4
+    self_lonely: true
+    self_lonely_msg_max: 5
+    self_lonely_uptime_min: 8
+    self_mood_swing: true
+    steam_game_ended: true
+    steam_achievement: true
+    memory_anchor: false
+  heartbeat:
+    enabled: true
+    daily_min: 1
+    window_start: "20:00"
+    window_end: "23:00"
+
+embedding:
+  enabled: false
+  provider: "openai"
+  api_base: ""
+  api_key: ""
+  model: "text-embedding-3-small"
+
+models:
+  summarization: ""
+  embedding: ""
+
+social_world:
+  max_people: 200
+  decay_days: 30
+  fuzzy_days: 60
+  observer_enabled: true
+
+output_segmentation:
+  enabled: true
+  preset: "natural"
+  min_text_length: 50
+  method: "auto"
+  split_strong: ["。", "？", "！", "…"]
+  split_medium: ["，", "；"]
+  min_segment_chars: 5
+  max_segments: 3
+  semantic_guard: true
+  delay_enabled: true
+  delay_base_min: 0.3
+  delay_base_max: 1.0
+  add_fillers: "contextual"
+  rate_limit_max_per_min: 10
+  rate_limit_burst: 3
+  scene_overrides:
+    group_chat_enabled: false
+
+capability:
+  operations:
+    open_program: true
+    note: true
+  willingness_enabled: true
+
+speaking_style:
+  enabled: true
+  verbosity: "normal"
+  formality: "casual"
+  emoji_usage: "never"
+  sentence_style: "natural"
+
+custom_rules: []
+
+prompts:
+  max_memories_in_prompt: 3
+
+interests:
+  enabled: true
+  min_explore_interval: 14400
+  min_re_explore: 86400
+  discovery_probability: 0.2
+  share_cooldown_per_interest: 86400
+  auto_observe_media: true
+  auto_observe_games: true
+  auto_observe_topics: true
+  max_interests: 20
+  seed_keywords: []
+  heartbeat:
+    enabled: true
+    daily_min_share: 1
+    active_window_start: "12:00"
+    active_window_end: "00:00"
+
+secretary:
+  enabled: true
+  model_provider: ""
+  message_window: 20
+  min_activity: "活跃"
+  allow_motivation_override: true
+  rules_apply_at: "both"
+  rules: |
+    被点名提到时应该回应
+    聊到熟悉的话题可以插话
+    群友在开玩笑或轻松聊天时可以接梗
+    群友在求助或认真提问时可以帮忙
+    群友在夸你或吐槽你时可以回应
+  silence_rules: |
+    群友在吵架或有火药味
+    讨论政治或宗教等敏感话题
+    消息太快太密插不上嘴
+    群友在互相聊天不是跟imbot说话
+    话题和imbot完全不沾边

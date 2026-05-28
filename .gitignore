@@ -1,0 +1,8 @@
+__pycache__/
+*.pyc
+*.pyo
+*.corrupted
+data/
+.vscode/
+.DS_Store
+Thumbs.db

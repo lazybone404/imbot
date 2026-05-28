@@ -1,0 +1,904 @@
+{
+  "owner": {
+    "description": "⚙️ 所有者",
+    "type": "object",
+    "hint": "填写你的 QQ 号。她对这个号码的人最亲近。",
+    "items": {
+      "qq_id": {
+        "description": "你的 QQ 号",
+        "type": "string",
+        "default": "",
+        "obvious_hint": true,
+        "hint": "填写后她才能认出你。她对你说话最温暖、最有耐心。"
+      }
+    }
+  },
+  "core": {
+    "description": "⚙️ 核心规则",
+    "type": "object",
+    "hint": "控制 imbot 核心功能开关。使用其他记忆/社交插件时可按需关闭。",
+    "items": {
+      "inject_rules": {
+        "description": "注入 imbot 核心规则",
+        "type": "bool",
+        "default": true,
+        "hint": "开启=注入身份/交互/反操控/群聊规则。关闭=完全不干预 LLM prompt"
+      },
+      "use_own_memory": {
+        "description": "使用 imbot 自带记忆和社交系统",
+        "type": "bool",
+        "default": true,
+        "hint": "关闭后跳过 imbot 的记忆、群聊记忆、社交关系网。可使用其他记忆插件替代"
+      }
+    }
+  },
+  "familiarity": {
+    "description": "🤝 熟悉度阶段",
+    "type": "object",
+    "hint": "和她互动越多，她对你越熟。设定起步阶段可以跳过磨合期。",
+    "items": {
+      "owner_baseline": {
+        "description": "你对她的初始熟悉度",
+        "type": "string",
+        "default": "熟识",
+        "options": [
+          "初识",
+          "熟识",
+          "亲近",
+          "深层",
+          "羁绊"
+        ],
+        "hint": "初识 = 陌生人 | 羁绊 = 最亲密。默认从「熟识」开始，如果想从零培养感情可以选「初识」"
+      }
+    }
+  },
+  "speaking_style": {
+    "description": "💬 说话方式",
+    "type": "object",
+    "hint": "独立于人格模板，始终生效。想关掉就用「正常 / 自然 / 从不 / 自然」——等于不干预。",
+    "items": {
+      "enabled": {
+        "description": "启用说话方式调节",
+        "type": "bool",
+        "default": true,
+        "hint": "关闭后不注入任何说话方式指令。全关等于不干预，让 LLM 自然发挥。"
+      },
+      "verbosity": {
+        "description": "话多话少",
+        "type": "string",
+        "default": "normal",
+        "options": [
+          "terse",
+          "normal",
+          "verbose"
+        ],
+        "hint": "极简 = 嗯/好/不 就够 | 正常 = 看情况 | 话多 = 爱聊"
+      },
+      "formality": {
+        "description": "亲疏程度",
+        "type": "string",
+        "default": "casual",
+        "options": [
+          "casual",
+          "normal",
+          "formal"
+        ],
+        "hint": "随意 = 损你两句也行 | 自然 = 正常对话 | 正式 = 保持礼貌距离"
+      },
+      "emoji_usage": {
+        "description": "用不用表情",
+        "type": "string",
+        "default": "never",
+        "options": [
+          "never",
+          "rarely",
+          "sometimes"
+        ],
+        "hint": "从不 = 纯文字 | 偶尔 = 心情好时用 | 有时 = 比较活泼"
+      },
+      "sentence_style": {
+        "description": "句子长短",
+        "type": "string",
+        "default": "natural",
+        "options": [
+          "natural",
+          "short",
+          "long"
+        ],
+        "hint": "自然 = 长短混用 | 短句 = 像聊天框打字 | 长句 = 完整表达"
+      }
+    }
+  },
+  "custom_rules": {
+    "description": "📝 你的专属规则",
+    "type": "list",
+    "default": [],
+    "hint": "告诉她你希望她怎么做。每行一条规则，会追加在默认规则之后。例如: 叫我二狗 | 不准说我胖 | 我打游戏时别烦我 | 早上要跟我说早安"
+  },
+  "group_chat": {
+    "description": "👥 群聊行为",
+    "type": "object",
+    "items": {
+      "enabled": {
+        "description": "允许在群里说话",
+        "type": "bool",
+        "default": true,
+        "hint": "关闭后她完全不在群里出现"
+      },
+      "proactive_in_group": {
+        "description": "主动在群里说话（非@情况下）",
+        "type": "bool",
+        "default": false,
+        "hint": "开启后她会在群聊主动插话（受秘书模型和活跃度门槛约束）。被@时总是回应，不受此开关影响"
+      },
+      "proactive_level": {
+        "description": "群聊主动回复程度",
+        "type": "string",
+        "default": "克制",
+        "options": ["克制", "适度", "活跃"],
+        "hint": "克制=很少插话 | 适度=偶尔参与 | 活跃=经常聊。控制非@场景下主动回复的意愿门槛"
+      }
+    }
+  },
+  "secretary": {
+    "description": "👁️ 群聊秘书模型 · 读空气",
+    "type": "object",
+    "hint": "可选增强——引入轻量模型阅读群聊上下文，判断是否该插话。关闭则降级为原有感知+主动层处理（被@时评估动机、群活跃时概率回应）。",
+    "items": {
+      "enabled": {
+        "description": "启用秘书模型",
+        "type": "bool",
+        "default": true,
+        "hint": "开启=模型读空气判断 + 前置过滤。关闭=降级到原始群聊逻辑（被@+活跃度→动机系统评估），不调模型"
+      },
+      "model_provider": {
+        "description": "秘书专用模型",
+        "type": "string",
+        "default": "",
+        "_special": "select_provider",
+        "hint": "留空则使用对话主模型。可为秘书单独指定一个便宜快速的模型。"
+      },
+      "message_window": {
+        "description": "分析最近消息条数",
+        "type": "int",
+        "default": 20,
+        "hint": "给秘书看的最近 N 条消息。太多浪费 token，太少不够判断"
+      },
+      "min_activity": {
+        "description": "最低活跃度门槛",
+        "type": "string",
+        "default": "活跃",
+        "options": [
+          "正常",
+          "活跃",
+          "很吵"
+        ],
+        "hint": "仅秘书启用时生效。群活跃度低于此值，前置过滤直接沉默，不调模型"
+      },
+      "allow_motivation_override": {
+        "description": "秘书建议可被动机拒绝",
+        "type": "bool",
+        "default": true,
+        "hint": "仅秘书启用时生效。开启=她可以拒绝秘书建议。关闭=秘书说回必回（动机无权拒绝）"
+      },
+      "rules_apply_at": {
+        "description": "自定义规则生效位置",
+        "type": "string",
+        "default": "both",
+        "options": [
+          "secretary",
+          "motivation",
+          "both"
+        ],
+        "hint": "secretary=规则只提示秘书 | motivation=规则作为硬约束，秘书说回但规则禁止→不回应 | both=双保险"
+      },
+      "rules": {
+        "description": "群聊判断规则",
+        "type": "text",
+        "default": "被点名提到时应该回应\n聊到熟悉的话题可以插话\n群友在开玩笑或轻松聊天时可以接梗\n群友在求助或认真提问时可以帮忙\n群友在夸你或吐槽你时可以回应",
+        "hint": "每条一行。告诉秘书模型什么情况下可以说话。可自由增删。"
+      },
+      "silence_rules": {
+        "description": "强制闭嘴规则",
+        "type": "text",
+        "default": "群友在吵架或有火药味\n讨论政治或宗教等敏感话题\n消息太快太密插不上嘴\n群友在互相聊天不是跟她说话\n话题和她完全不沾边",
+        "hint": "这些场景下必须闭嘴，不受其他设置影响。每条一行，可自由增删。"
+      }
+    }
+  },
+  "proactive": {
+    "description": "🗣️ 主动互动（私聊）",
+    "type": "object",
+    "hint": "你没说话时她来找你。有冷却和防呆保护。群聊主动回复请见「群聊行为」面板。",
+    "items": {
+      "enabled": {
+        "description": "允许她主动找你",
+        "type": "bool",
+        "default": false,
+        "obvious_hint": true,
+        "hint": "开启后她会在私聊主动找你互动（群聊则是看情况插话）。有冷却和降频保护，不会刷屏。"
+      },
+      "min_interval": {
+        "description": "两次主动至少隔多久（分钟）",
+        "type": "int",
+        "default": 15
+      },
+      "max_per_3h": {
+        "description": "滑动窗口内最多主动几次",
+        "type": "int",
+        "default": 3
+      },
+      "window_hours": {
+        "description": "滑动窗口时长（小时）",
+        "type": "int",
+        "default": 3,
+        "hint": "配合上面的次数限制，如3h内最多3次。调大=更克制，调小=更自由"
+      },
+      "silence_after_ignored": {
+        "description": "你不理她几次后她会安静",
+        "type": "int",
+        "default": 3,
+        "hint": "你完全不回她消息的次数达到后，她的主动互动间隔会越来越长"
+      },
+      "quiet_mode_duration": {
+        "description": "你说「安静一会」管多久（分钟）",
+        "type": "int",
+        "default": 30
+      },
+      "tendency": {
+        "description": "主动互动的语气倾向",
+        "type": "string",
+        "default": "natural",
+        "options": ["natural", "随性", "关心", "吐槽", "好奇", "安静"],
+        "hint": "控制她主动找你时说话的口吻。natural=不干预"
+      },
+      "custom_hint": {
+        "description": "主动互动自定义提示词",
+        "type": "text",
+        "default": "",
+        "hint": "追加到主动互动 prompt 末尾。如「语气随意」「别催人休息」「多问问题少陈述」"
+      },
+      "triggers": {
+        "description": "私聊主动互动的触发条件",
+        "type": "object",
+        "hint": "每个触发条件都可独立开关。仅对 owner 私聊生效，群聊走独立规则。",
+        "items": {
+          "long_silence_hours": {
+            "description": "你多久不说话她会想你（小时）",
+            "type": "int",
+            "default": 6
+          },
+          "late_night": {
+            "description": "你深夜还在她会关心",
+            "type": "bool",
+            "default": true
+          },
+          "user_returned": {
+            "description": "你离开电脑又回来",
+            "type": "bool",
+            "default": true
+          },
+          "game_ended": {
+            "description": "你打完游戏",
+            "type": "bool",
+            "default": true
+          },
+          "late_night_music": {
+            "description": "深夜在听歌",
+            "type": "bool",
+            "default": true
+          },
+          "long_session": {
+            "description": "在线太久了她会关心",
+            "type": "bool",
+            "default": true
+          },
+          "self_lonely": {
+            "description": "她自己觉得孤单了",
+            "type": "bool",
+            "default": true
+          },
+          "self_mood_swing": {
+            "description": "她情绪突然变了",
+            "type": "bool",
+            "default": true
+          },
+          "steam_game_ended": {
+            "description": "Steam 游戏结束",
+            "type": "bool",
+            "default": true
+          },
+          "steam_achievement": {
+            "description": "Steam 成就解锁",
+            "type": "bool",
+            "default": true
+          },
+          "memory_anchor": {
+            "description": "环境触发了回忆",
+            "type": "bool",
+            "default": false,
+            "hint": "当前环境和以前某段高强度记忆相似时触发。实验性"
+          },
+          "late_night_start": {
+            "description": "深夜开始时间（小时）",
+            "type": "int",
+            "default": 0,
+            "hint": "0-5。深夜时段起点，如 0=零点开始算深夜"
+          },
+          "late_night_end": {
+            "description": "深夜结束时间（小时）",
+            "type": "int",
+            "default": 5,
+            "hint": "0-8。深夜时段终点，如 5=凌晨 5 点结束"
+          },
+          "long_session_hours": {
+            "description": "在线多久算久（小时）",
+            "type": "int",
+            "default": 4,
+            "hint": "1-24。超过此阈值触发长会话关心"
+          },
+          "self_lonely_msg_max": {
+            "description": "话少上限（条/天）",
+            "type": "int",
+            "default": 5,
+            "hint": "1-100。今天话少于此值 + 运行久 → 触发孤独感"
+          },
+          "self_lonely_uptime_min": {
+            "description": "运行多久算久（小时）",
+            "type": "int",
+            "default": 8,
+            "hint": "1-48。运行超过此值 + 话少 → 触发孤独感"
+          }
+        }
+      },
+      "base_probability": {
+        "description": "单触发概率基数",
+        "type": "float",
+        "default": 0.3,
+        "hint": "每个触发源的通过概率 = 此值 × 触发源数量。范围 0.05-1.0。设太高会吵"
+      },
+      "heartbeat": {
+        "description": "💓 主动互动心跳保底",
+        "type": "object",
+        "hint": "确保每天至少主动互动指定次数，窗口内无触发时补一刀。不绕过静音和忽略降频。",
+        "items": {
+          "enabled": {
+            "description": "启用心跳保底",
+            "type": "bool",
+            "default": true,
+            "hint": "开启后每天在窗口时段保底至少互动一次"
+          },
+          "daily_min": {
+            "description": "每天至少主动互动次数",
+            "type": "int",
+            "default": 1,
+            "hint": "0-5。设 0=关闭保底。设太高可能过于频繁"
+          },
+          "window_start": {
+            "description": "心跳窗口开始（HH:MM）",
+            "type": "string",
+            "default": "20:00",
+            "hint": "保底在此时段内生效。如 20:00 表示晚上 8 点开始"
+          },
+          "window_end": {
+            "description": "心跳窗口结束（HH:MM）",
+            "type": "string",
+            "default": "23:00",
+            "hint": "保底在此时段结束时检查。支持跨日如 22:00-02:00"
+          }
+        }
+      }
+    }
+  },
+  "interests": {
+    "description": "🔍 兴趣池 — 她的好奇心引擎。从你听的歌、打的游戏、聊的话题里自动发现兴趣，偶尔自己去查一查，发现有趣的回来跟你说。",
+    "type": "object",
+    "items": {
+      "enabled": {
+        "description": "启用兴趣池",
+        "type": "bool",
+        "default": true,
+        "hint": "关闭后不再自动发现兴趣，但已发现的兴趣保留在文件中"
+      },
+      "min_explore_interval": {
+        "description": "两次探索最小间隔（秒）",
+        "type": "int",
+        "default": 14400,
+        "hint": "防呆范围 1800-86400（30分钟-24小时）。默认 4 小时。调小=更频繁触发"
+      },
+      "min_re_explore": {
+        "description": "同一兴趣最小再探索间隔（秒）",
+        "type": "int",
+        "default": 86400,
+        "hint": "防呆范围 3600-604800（1小时-7天）。默认 24 小时。避免对同一个话题反复查"
+      },
+      "discovery_probability": {
+        "description": "探索概率",
+        "type": "float",
+        "default": 0.2,
+        "hint": "防呆范围 0.05-0.8（5%-80%）。每次满足冷却条件时触发探索的概率。设太高会频繁打扰"
+      },
+      "share_cooldown_per_interest": {
+        "description": "同一兴趣分享冷却（秒）",
+        "type": "int",
+        "default": 86400,
+        "hint": "默认 24 小时。同一个兴趣一天最多分享一次"
+      },
+      "max_interests": {
+        "description": "最大兴趣数",
+        "type": "int",
+        "default": 20,
+        "hint": "超过时自动淘汰最不活跃的兴趣"
+      },
+      "seed_keywords": {
+        "description": "初始兴趣关键词",
+        "type": "list",
+        "default": [],
+        "hint": "手动输入她应该感兴趣的关键词，如「AI绘画」「老头环」「独立游戏」。每行一个，启动时自动加入兴趣池"
+      },
+      "auto_observe_media": {
+        "description": "从媒体感知自动捕获兴趣",
+        "type": "bool",
+        "default": true,
+        "hint": "经常用的播放器会被识别为兴趣"
+      },
+      "auto_observe_games": {
+        "description": "从游戏感知自动捕获兴趣",
+        "type": "bool",
+        "default": true,
+        "hint": "连续多日玩的游戏会被识别为兴趣"
+      },
+      "auto_observe_topics": {
+        "description": "从对话中自动捕获兴趣",
+        "type": "bool",
+        "default": true,
+        "hint": "你反复提及的话题会被她记住"
+      },
+      "heartbeat": {
+        "description": "存在心跳 — 每天至少因为自己的兴趣开口一次",
+        "type": "object",
+        "items": {
+          "enabled": {
+            "description": "启用心跳保底",
+            "type": "bool",
+            "default": true,
+            "hint": "如果在心跳窗口内还没有过兴趣分享，她会找一个兴趣去探索"
+          },
+          "daily_min_share": {
+            "description": "每天至少分享次数",
+            "type": "int",
+            "default": 1,
+            "hint": "心跳目标：确保每天至少分享这么多次。设 0 关闭"
+          },
+          "active_window_start": {
+            "description": "心跳窗口起始（HH:MM）",
+            "type": "string",
+            "default": "12:00",
+            "hint": "心跳只在窗口内触发。默认 12:00-00:00"
+          },
+          "active_window_end": {
+            "description": "心跳窗口结束（HH:MM）",
+            "type": "string",
+            "default": "00:00",
+            "hint": "支持跨日，如 21:00-02:00。00:00 表示当天结束"
+          }
+        }
+      }
+    }
+  },
+  "perception": {
+    "description": "👁️ 环境感知 · 她知道你在做什么",
+    "type": "object",
+    "hint": "她能感知你的电脑状态——你在打游戏、听歌、熬夜、不在座位。所有数据本地处理，不上传。",
+    "items": {
+      "enabled": {
+        "description": "总开关",
+        "type": "bool",
+        "default": true,
+        "hint": "关闭后她变成瞎子，对电脑状态一无所知"
+      },
+      "interval": {
+        "description": "刷新间隔（秒）",
+        "type": "int",
+        "default": 300,
+        "hint": "感知数据多久刷新一次。默认 5 分钟。太短耗资源，太长反应迟钝"
+      },
+      "idle": {
+        "description": "知道你在不在电脑前",
+        "type": "bool",
+        "default": true
+      },
+      "late_night_tracking": {
+        "description": "知道你熬了几天夜",
+        "type": "bool",
+        "default": true
+      },
+      "process": {
+        "description": "知道你在用什么软件",
+        "type": "bool",
+        "default": true,
+        "hint": "能分辨打游戏/办公/看视频/逛网页/聊天"
+      },
+      "media": {
+        "description": "知道你在听歌还是看视频",
+        "type": "bool",
+        "default": true
+      },
+      "session_duration": {
+        "description": "知道你在线多久了",
+        "type": "object",
+        "items": {
+          "enabled": {
+            "description": "追踪在线时长",
+            "type": "bool",
+            "default": true
+          },
+          "long_threshold": {
+            "description": "多少小时算太久",
+            "type": "int",
+            "default": 4,
+            "hint": "超过这个时间她会关心一句「你待了好久」"
+          }
+        }
+      },
+      "self_awareness": {
+        "description": "知道自己的状态",
+        "type": "object",
+        "items": {
+          "enabled": {
+            "description": "追踪自身运行状态",
+            "type": "bool",
+            "default": true,
+            "hint": "运行了多久、今天说了多少话、对话了几轮"
+          }
+        }
+      },
+      "steam": {
+        "description": "🎮 Steam 游戏感知",
+        "type": "object",
+        "hint": "知道你在 Steam 上打什么游戏、玩了多久。需要 Steam API Key。国内用户可能需要配代理。",
+        "items": {
+          "enabled": {
+            "description": "启用",
+            "type": "bool",
+            "default": false
+          },
+          "api_key": {
+            "description": "Steam Web API Key",
+            "type": "string",
+            "default": "",
+            "hint": "在 https://steamcommunity.com/dev/apikey 免费获取"
+          },
+          "steam_id": {
+            "description": "你的 Steam 64 位 ID",
+            "type": "string",
+            "default": "",
+            "hint": "Steam 个人资料 URL 里那串 17 位数字。例如 7656119xxxxxxxxxx"
+          },
+          "poll_interval": {
+            "description": "刷新间隔（秒）",
+            "type": "int",
+            "default": 300,
+            "hint": "最低 60 秒。太频繁会被 Steam 限制"
+          },
+          "proxy": {
+            "description": "代理地址",
+            "type": "string",
+            "default": "",
+            "hint": "国内直连 Steam API 可能超时。如果你开了 clash/v2ray，填 http://127.0.0.1:7890"
+          },
+          "timeout": {
+            "description": "请求超时（秒）",
+            "type": "int",
+            "default": 15
+          },
+          "expose": {
+            "description": "让她知道哪些信息",
+            "type": "object",
+            "items": {
+              "current_game": {
+                "description": "正在玩什么游戏",
+                "type": "bool",
+                "default": true
+              },
+              "playtime_session": {
+                "description": "这次玩了多久",
+                "type": "bool",
+                "default": true
+              },
+              "recently_played": {
+                "description": "最近在玩哪些",
+                "type": "bool",
+                "default": true
+              },
+              "rich_presence": {
+                "description": "游戏内详细状态",
+                "type": "bool",
+                "default": false
+              },
+              "achievements": {
+                "description": "解锁了新成就",
+                "type": "bool",
+                "default": false,
+                "hint": "开启后她会知道你刚解锁了什么成就"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "capability": {
+    "description": "🔧 她能做什么",
+    "type": "object",
+    "hint": "她有能力操作你的电脑。是否允许、以及她帮不帮，看心情。",
+    "items": {
+      "willingness_enabled": {
+        "description": "帮不帮看心情",
+        "type": "bool",
+        "default": true,
+        "hint": "关闭后她来者不拒，打开后她会根据对你的熟悉度和自己的情绪决定帮不帮"
+      },
+      "open_program": {
+        "description": "帮你打开软件",
+        "type": "bool",
+        "default": true,
+        "hint": "只允许白名单内的安全程序"
+      },
+      "note": {
+        "description": "帮你记便签",
+        "type": "bool",
+        "default": true
+      }
+    }
+  },
+  "memory": {
+    "description": "🧠 私聊记忆",
+    "type": "object",
+    "hint": "控制她能记住多少你们之间的事、忘得多快。数值越大记住越多，但太大会让回复变慢。",
+    "items": {
+      "max_entries": {
+        "description": "能记住几件事",
+        "type": "int",
+        "default": 150,
+        "hint": "普通记忆的最大条数"
+      },
+      "deep_pool_size": {
+        "description": "深层记忆池",
+        "type": "int",
+        "default": 500,
+        "hint": "被遗忘的事先丢这里，偶尔会被想起来的记忆容量"
+      },
+      "base_decay_rate": {
+        "description": "遗忘速度",
+        "type": "float",
+        "default": 0.02,
+        "hint": "每天衰减的比例。0.02 = 每天淡忘 2%。调到 0 就不会忘"
+      },
+      "core_limit": {
+        "description": "永久不忘的记忆数",
+        "type": "int",
+        "default": 5,
+        "hint": "最高强度的记忆永不衰减，这是上限"
+      },
+      "owner_core_limit": {
+        "description": "关于你的永久记忆",
+        "type": "int",
+        "default": 3,
+        "hint": "专门为你保留的永久记忆配额"
+      },
+      "owner_decay_mult": {
+        "description": "关于你的记忆忘得更慢",
+        "type": "float",
+        "default": 1.5,
+        "hint": "大于 1 就比别人忘得慢。1.5 = 关于你的记忆衰减慢 50%"
+      },
+      "owner_retrieval_bonus": {
+        "description": "更容易想起你的事",
+        "type": "float",
+        "default": 1.0,
+        "hint": "越大越容易在对话中想起和你的过往"
+      },
+      "consolidation": {
+        "description": "启动时整理记忆",
+        "type": "bool",
+        "default": true,
+        "hint": "每次启动时离线整理一次记忆，类似人睡醒后巩固记忆"
+      },
+      "tot_enabled": {
+        "description": "话在嘴边想不起来",
+        "type": "bool",
+        "default": true,
+        "hint": "开启后她有时会觉得「好像记得但想不起来」，更像真人"
+      },
+      "emotion_residue": {
+        "description": "情绪会留下痕迹",
+        "type": "bool",
+        "default": true,
+        "hint": "高强度情绪事件会在记忆中留下印记"
+      },
+      "allow_user_correction": {
+        "description": "你可以纠正她的记忆",
+        "type": "bool",
+        "default": true,
+        "hint": "你说「你记错了」她就会修正"
+      }
+    }
+  },
+  "group_memory": {
+    "description": "🧩 群聊记忆",
+    "type": "object",
+    "hint": "群聊的单独记忆系统，比私聊更小更快。",
+    "items": {
+      "max_entries": {
+        "description": "每个群记住几件事",
+        "type": "int",
+        "default": 30,
+        "hint": "群里人多嘴杂，记得少一点"
+      },
+      "base_decay_rate": {
+        "description": "群聊遗忘速度",
+        "type": "float",
+        "default": 0.03,
+        "hint": "群聊比私聊忘得快（0.03 vs 0.02）"
+      }
+    }
+  },
+  "social_world": {
+    "description": "🌐 社交感知",
+    "type": "object",
+    "hint": "她会逐渐认识你的朋友，从称呼、语气猜谁和你是什么关系。数据存本地，不上传。",
+    "items": {
+      "observer_enabled": {
+        "description": "观察人际关系",
+        "type": "bool",
+        "default": true,
+        "hint": "关闭后她不再分析你和谁好、谁爱抬杠"
+      },
+      "max_people": {
+        "description": "最多记住几个人",
+        "type": "int",
+        "default": 200
+      },
+      "decay_days": {
+        "description": "多久不互动关系开始降温",
+        "type": "int",
+        "default": 30
+      },
+      "fuzzy_days": {
+        "description": "多久不互动标记为不确定",
+        "type": "int",
+        "default": 60,
+        "hint": "超过这个天数她会说「不太确定」"
+      }
+    }
+  },
+  "output_segmentation": {
+    "description": "📨 消息发送风格",
+    "type": "object",
+    "hint": "控制她的回复怎么拆成多条消息发送，模拟真人换气的节奏。",
+    "items": {
+      "enabled": {
+        "description": "分段发送",
+        "type": "bool",
+        "default": true,
+        "hint": "关闭后所有回复一口气发完，像传统AI"
+      },
+      "preset": {
+        "description": "分段风格",
+        "type": "string",
+        "default": "natural",
+        "options": [
+          "natural",
+          "fragmented",
+          "concise",
+          "dramatic",
+          "instant"
+        ],
+        "hint": "natural: 自然停顿，像人说话 | fragmented: 短句连发，像聊天框 | concise: 尽量不分段 | dramatic: 长停顿，有情绪 | instant: 不分段"
+      },
+      "max_segments": {
+        "description": "最多拆成几段",
+        "type": "int",
+        "default": 3
+      },
+      "min_text_length": {
+        "description": "多长才分段",
+        "type": "int",
+        "default": 50,
+        "hint": "短于此长度的消息不分段"
+      },
+      "delay_enabled": {
+        "description": "段间加延迟",
+        "type": "bool",
+        "default": true,
+        "hint": "每条消息之间等一小会儿，更像真人在打字"
+      },
+      "delay_base_min": {
+        "description": "最短等待（秒）",
+        "type": "float",
+        "default": 0.3
+      },
+      "delay_base_max": {
+        "description": "最长等待（秒）",
+        "type": "float",
+        "default": 1.0
+      },
+      "add_fillers": {
+        "description": "段间加语气词",
+        "type": "string",
+        "default": "contextual",
+        "options": [
+          "none",
+          "contextual",
+          "random"
+        ],
+        "hint": "分段时偶尔插「…」「嗯」「然后」之类的填充词"
+      },
+      "rate_limit_max_per_min": {
+        "description": "每分钟最多几条",
+        "type": "int",
+        "default": 10,
+        "hint": "防止刷屏，超过这个数后面的消息会被合并"
+      }
+    }
+  },
+  "models": {
+    "description": "🤖 后台任务模型",
+    "type": "object",
+    "hint": "记忆摘要、语义搜索等后台任务使用的模型。为空则自动复用 AstrBot 默认模型。",
+    "items": {
+      "summarization": {
+        "description": "记忆摘要模型",
+        "type": "string",
+        "default": "",
+        "_special": "select_provider",
+        "hint": "为空则复用对话模型。用于将记忆压缩为简短摘要。从 AstrBot 已配置的提供商中选择。"
+      },
+      "embedding": {
+        "description": "语义搜索嵌入模型",
+        "type": "string",
+        "default": "",
+        "_special": "select_provider",
+        "hint": "为空则自动查找 AstrBot 中已配置的嵌入模型。"
+      }
+    }
+  },
+  "embedding": {
+    "description": "🔍 语义搜索 · 记忆向量化",
+    "type": "object",
+    "hint": "开启后记忆浮现不再靠猜关键词，而是用语义相似度匹配。",
+    "items": {
+      "enabled": {
+        "description": "启用语义搜索",
+        "type": "bool",
+        "default": false,
+        "hint": "开启后自动对记忆计算向量，实现语义相似度检索"
+      },
+      "api_base": {
+        "description": "嵌入 API 地址",
+        "type": "string",
+        "default": "",
+        "hint": "如使用本地 Ollama，填 http://127.0.0.1:11434/v1"
+      },
+      "model": {
+        "description": "嵌入模型名称",
+        "type": "string",
+        "default": "text-embedding-3-small",
+        "hint": "如 text-embedding-3-small（OpenAI）、bge-large-zh、nomic-embed-text（Ollama）等"
+      }
+    }
+  },
+  "prompts": {
+    "description": "⏱️ Prompt 设置",
+    "type": "object",
+    "items": {
+      "max_memories_in_prompt": {
+        "description": "每次对话最多浮现几条记忆",
+        "type": "int",
+        "default": 3,
+        "hint": "太多记忆会让她的回复跑偏，太少显得健忘"
+      }
+    }
+  }
+}
