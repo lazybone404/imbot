@@ -7,10 +7,10 @@ from imbot.prompt_orch import TRIGGER_DESCRIPTIONS
 
 
 class ProactiveOrchestrator:
-    def __init__(self, engine):
-        self._e = engine
+    def __init__(self, engine) -> None:
+        self._e = engine  # CoreEngine 引用
 
-    async def _proactive_loop(self):
+    async def _proactive_loop(self) -> None:
         await asyncio.sleep(90)  # 等感知层积累初始数据
         while True:
             await asyncio.sleep(30)
@@ -82,7 +82,7 @@ class ProactiveOrchestrator:
                             await self._execute_proactive(ctx)
                             self._e._hb_today_count += 1
 
-    async def _execute_proactive(self, trigger_ctx: dict):
+    async def _execute_proactive(self, trigger_ctx: dict) -> None:
         from astrbot.api import logger
         try:
             prompt = self._build_proactive_prompt(trigger_ctx)
@@ -189,7 +189,7 @@ class ProactiveOrchestrator:
             logger.error("LLM 调用失败", exc_info=True)
         return ""
 
-    async def _execute_interest_explore(self, trigger_ctx: dict):
+    async def _execute_interest_explore(self, trigger_ctx: dict) -> None:
         """兴趣探索：调用轻量 LLM，让它用原生搜索工具查 + 判断趣味性"""
         from astrbot.api import logger
         try:

@@ -9,10 +9,10 @@ import time
 
 
 class InterestPool:
-    def __init__(self, config, data_dir: str):
+    def __init__(self, config, data_dir: str) -> None:
         self.cfg = config
-        self._data_dir = data_dir
-        self._path = os.path.join(data_dir, "interests.json")
+        self._data_dir: str = data_dir
+        self._path: str = os.path.join(data_dir, "interests.json")
         self.interests: list[dict] = []
         self._media_counts: dict[str, int] = {}       # {player_name: today_count}
         self._game_streaks: dict[str, int] = {}        # {game_name: consecutive_days}
@@ -23,12 +23,12 @@ class InterestPool:
         self._today_date: str = ""
         self._llm_call = None  # 由 engine 注入: async fn(prompt) -> str
 
-    def bind_llm(self, fn):
+    def bind_llm(self, fn) -> None:
         """注入 LLM 调用函数: async fn(prompt) -> str"""
         self._llm_call = fn
 
     # ── 持久化 ──
-    def load(self):
+    def load(self) -> None:
         try:
             with open(self._path, "r", encoding="utf-8") as f:
                 data = json.load(f)
@@ -43,7 +43,7 @@ class InterestPool:
                 pass
             self.interests = []
 
-    def apply_seed_keywords(self):
+    def apply_seed_keywords(self) -> None:
         """将用户配置的初始关键词注入兴趣池（已存在则跳过）"""
         for kw in self.cfg.seed_keywords:
             kw = kw.strip()
@@ -52,7 +52,7 @@ class InterestPool:
         if self.cfg.seed_keywords:
             self.save()
 
-    def save(self):
+    def save(self) -> None:
         try:
             os.makedirs(self._data_dir, exist_ok=True)
             with open(self._path, "w", encoding="utf-8") as f:
@@ -62,7 +62,7 @@ class InterestPool:
             logger.error("兴趣池写入失败", exc_info=True)
 
     # ── 每日重置 ──
-    def _check_day(self):
+    def _check_day(self) -> None:
         today = time.strftime("%Y-%m-%d")
         if self._today_date != today:
             self._today_date = today
@@ -70,7 +70,7 @@ class InterestPool:
             self._today_shares = 0
 
     # ── tick: 每 30s 调用 ──
-    def tick(self, perception: dict):
+    def tick(self, perception: dict) -> None:
         """驱动媒体/游戏计数累积和衰减"""
         if not self.cfg.enabled:
             return
@@ -146,7 +146,7 @@ class InterestPool:
 
         return captured
 
-    def capture_topic(self, text: str):
+    def capture_topic(self, text: str) -> None:
         """从对话消息中提取话题关键词。用标点/空格切分，取 2-8 字片段去重计数。"""
         if not self.cfg.auto_observe_topics:
             return
@@ -204,7 +204,7 @@ class InterestPool:
         self.save()
         return True
 
-    def _evict_one(self):
+    def _evict_one(self) -> None:
         """淘汰一个兴趣：优先 dormant，其次最低 intensity"""
         dormant = [i for i in self.interests if i.get("status") == "dormant"]
         if dormant:
@@ -213,7 +213,7 @@ class InterestPool:
             target = min(self.interests, key=lambda i: i.get("intensity", 0))
         self.interests.remove(target)
 
-    def user_add(self, keyword: str):
+    def user_add(self, keyword: str) -> bool:
         """用户手动添加"""
         added = self._add_interest(keyword, "user_suggest", intensity=3)
         self.save()
@@ -286,7 +286,7 @@ class InterestPool:
                 return i
         return items[-1]
 
-    def record_exploration(self, keyword: str, interesting: bool, summary: str = ""):
+    def record_exploration(self, keyword: str, interesting: bool, summary: str = "") -> None:
         now = time.time()
         for it in self.interests:
             if it["keyword"] == keyword:
@@ -297,7 +297,7 @@ class InterestPool:
                 self.save()
                 return
 
-    def record_share(self, keyword: str):
+    def record_share(self, keyword: str) -> None:
         now = time.time()
         for it in self.interests:
             if it["keyword"] == keyword:
@@ -307,7 +307,7 @@ class InterestPool:
                 self.save()
                 return
 
-    def record_user_reaction(self, keyword: str, positive: bool):
+    def record_user_reaction(self, keyword: str, positive: bool) -> None:
         for it in self.interests:
             if it["keyword"] == keyword:
                 if positive:
@@ -358,7 +358,7 @@ class InterestPool:
         return self._last_explore_time
 
     @last_explore_time.setter
-    def last_explore_time(self, val: float):
+    def last_explore_time(self, val: float) -> None:
         self._last_explore_time = val
 
     def heartbeat_due(self) -> bool:

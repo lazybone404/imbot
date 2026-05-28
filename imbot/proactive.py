@@ -1,18 +1,22 @@
 import random
 import time
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from imbot.config import ImbotConfig
 
 
 class ProactiveManager:
-    def __init__(self, config, engine):
+    def __init__(self, config: ImbotConfig, engine) -> None:
         self.cfg = config.proactive
         self.engine = engine
-        self._last_proactive_time = 0.0
-        self._proactive_count = 0
-        self._proactive_window_start = 0.0
-        self._ignore_streak = 0
-        self._quiet_until = 0.0
-        self._last_trigger_type = None
-        self._last_anchor_check = 0.0
+        self._last_proactive_time: float = 0.0
+        self._proactive_count: int = 0
+        self._proactive_window_start: float = 0.0
+        self._ignore_streak: int = 0
+        self._quiet_until: float = 0.0
+        self._last_trigger_type: tuple | None = None
+        self._last_anchor_check: float = 0.0
 
     # ── 触发检查 ──
     def check_triggers(self) -> dict | None:
@@ -228,7 +232,7 @@ class ProactiveManager:
         return {"triggers": triggers, "intensity": intensity, "tone": tone}
 
     # ── 执行记录 ──
-    def execute(self, trigger_ctx: dict):
+    def execute(self, trigger_ctx: dict) -> None:
         self._last_proactive_time = time.time()
         self._proactive_count += 1
         self._last_trigger_type = tuple(sorted(
@@ -236,15 +240,15 @@ class ProactiveManager:
         ))
 
     # ── 用户交互钩子 ──
-    def on_user_interaction(self):
+    def on_user_interaction(self) -> None:
         self._proactive_count = 0
         self._proactive_window_start = time.time()
         self._ignore_streak = 0
 
-    def on_proactive_ignored(self):
+    def on_proactive_ignored(self) -> None:
         self._ignore_streak += 1
 
-    def set_quiet(self, minutes: int):
+    def set_quiet(self, minutes: int) -> None:
         actual = min(minutes, 120)  # 最长 2 小时
         self._quiet_until = time.time() + actual * 60
         self._quiet_was_user_set = True

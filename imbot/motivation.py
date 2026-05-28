@@ -2,6 +2,7 @@ import random
 
 TONES = ("冷淡", "安静", "温和", "好奇", "烦躁", "随性")
 
+# 身份调节系数: concern=关心程度, withdrawal=回避倾向
 MODIFIERS = {
     "owner": {
         "concern": 0.3,

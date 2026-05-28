@@ -9,14 +9,14 @@ THRESHOLDS = (0, 5, 20, 50, 100)
 
 
 class RuntimeState:
-    def __init__(self, path: str, owner_id: str, owner_baseline_stage: str = "熟识"):
-        self._path = path
-        self._owner_id = owner_id
-        self._owner_baseline = owner_baseline_stage
-        self.mood = "安静"
-        self.mood_intensity = 0.5
-        self.energy = 1.0
-        self._previous_mood = "安静"
+    def __init__(self, path: str, owner_id: str, owner_baseline_stage: str = "熟识") -> None:
+        self._path: str = path
+        self._owner_id: str = owner_id
+        self._owner_baseline: str = owner_baseline_stage
+        self.mood: str = "安静"
+        self.mood_intensity: float = 0.5
+        self.energy: float = 1.0
+        self._previous_mood: str = "安静"
         self._familiarity: dict[str, int] = {}
         self._silence_count: dict[str, int] = {}
         self._last_interaction: dict[str, float] = {}
@@ -54,7 +54,7 @@ class RuntimeState:
         t = self._last_interaction.get(user_id)
         return time.time() - t if t else 0.0
 
-    def record_interaction(self, user_id: str):
+    def record_interaction(self, user_id: str) -> None:
         if not user_id:
             return
         if user_id == self._owner_id and user_id not in self._familiarity:
@@ -69,7 +69,7 @@ class RuntimeState:
         self._last_interaction[user_id] = time.time()
 
     # ── 沉默计数 ──
-    def record_silence(self, user_id: str):
+    def record_silence(self, user_id: str) -> None:
         self._silence_count[user_id] = self._silence_count.get(user_id, 0) + 1
 
     def should_force_respond(self, user_id: str) -> bool:
@@ -78,7 +78,7 @@ class RuntimeState:
         return self._silence_count.get(user_id, 0) >= 20
 
     # ── 情绪 ──
-    def update_mood(self, mood: str, intensity: float = None):
+    def update_mood(self, mood: str, intensity: float = None) -> None:
         if mood not in MOODS:
             return
         self._previous_mood = self.mood
@@ -90,7 +90,8 @@ class RuntimeState:
         if intensity is not None:
             self.mood_intensity = max(0.1, min(1.0, intensity))
 
-    def decay(self):
+    # 每5分钟衰减5%强度+2%精力，无互动时不衰减（恢复靠record_interaction）
+    def decay(self) -> None:
         elapsed_ms = 0
         last_time = max(self._last_interaction.values()) if self._last_interaction else None
         if last_time:
@@ -137,7 +138,7 @@ class RuntimeState:
                 pass
         return state
 
-    def save(self):
+    def save(self) -> None:
         try:
             os.makedirs(os.path.dirname(self._path), exist_ok=True)
             with open(self._path, "w", encoding="utf-8") as f:
@@ -145,7 +146,7 @@ class RuntimeState:
         except OSError:
             pass
 
-    def reset(self):
+    def reset(self) -> None:
         self.mood = "安静"
         self.mood_intensity = 0.5
         self.energy = 1.0

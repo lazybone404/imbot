@@ -23,10 +23,10 @@ TRIGGER_DESCRIPTIONS = {
 
 
 class PromptOrchestrator:
-    def __init__(self, engine):
-        self._e = engine
+    def __init__(self, engine) -> None:
+        self._e = engine  # CoreEngine 引用
 
-    async def _build_group_prompt(self, event, speaker_id, speaker_type, time_ctx) -> dict | None:
+    async def _build_group_prompt(self, event, speaker_id: str, speaker_type: str, time_ctx: dict) -> dict | None:
         from astrbot.api import logger
 
         mention = self._e.group_perception.detect_mention(event)
@@ -203,7 +203,7 @@ class PromptOrchestrator:
             logger.error("模板渲染失败", exc_info=True)
             return {"static": self._fallback_prompt(), "dynamic": ""}
 
-    async def _build_private_prompt(self, event, speaker_id, speaker_type, time_ctx) -> dict | None:
+    async def _build_private_prompt(self, event, speaker_id: str, speaker_type: str, time_ctx: dict) -> dict | None:
         from astrbot.api import logger
 
         result = self._e.motivation.evaluate(self._e.state, time_ctx, speaker_type, is_group=False)

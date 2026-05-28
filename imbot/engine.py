@@ -1,7 +1,10 @@
+from __future__ import annotations
+
 import asyncio
 import os
 import random
 import time
+from typing import TYPE_CHECKING
 
 from imbot.utils import get_current_time_context, parse_llm_json, call_lightweight_llm, parse_time_window
 from imbot.state import RuntimeState
@@ -22,9 +25,12 @@ from imbot.secretary import Secretary
 from imbot.prompt_orch import PromptOrchestrator, FALLBACK_TIME_CTX
 from imbot.proactive_orch import ProactiveOrchestrator
 
+if TYPE_CHECKING:
+    from imbot.config import ImbotConfig
+
 
 class CoreEngine:
-    def __init__(self, config, plugin_dir: str, plugin_context=None):
+    def __init__(self, config: ImbotConfig, plugin_dir: str, plugin_context=None) -> None:
         self.config = config
         self.plugin_dir = plugin_dir
         self.plugin_context = plugin_context
@@ -35,33 +41,34 @@ class CoreEngine:
             self.data_dir = str(Path(get_astrbot_data_path()) / "plugin_data" / "imbot")
         except ImportError:
             self.data_dir = os.path.join(plugin_dir, "data")
-        self._last_time_ctx = None
-        self._last_should_silence = False
-        self._last_motivation_result = None
-        self._is_proactive = False
-        self._last_was_proactive = False
+        self._last_time_ctx: dict | None = None
+        self._last_should_silence: bool = False
+        self._last_motivation_result: dict | None = None
+        self._is_proactive: bool = False
+        self._last_was_proactive: bool = False
         self._tasks: list = []
-        self._platform_id = "aiocqhttp"  # 从事件中动态更新
+        self._platform_id: str = "aiocqhttp"  # 从事件中动态更新
 
-        self.state = None
-        self.memory = None
-        self.group_memory = None
-        self.group_perception = None
-        self.motivation = None
-        self.rules = None
-        self.prompt = None
-        self.social_world = None
-        self.social_observer = None
-        self.segmentation = None
-        self.perception = None
-        self._current_perception = {}
+        self.state: RuntimeState | None = None
+        self.memory: MemoryManager | None = None
+        self.group_memory: GroupMemoryManager | None = None
+        self.group_perception: GroupPerception | None = None
+        self.motivation: MotivationEngine | None = None
+        self.rules: MetaRules | None = None
+        self.prompt: PromptBuilder | None = None
+        self.social_world: SocialWorld | None = None
+        self.social_observer: SocialObserver | None = None
+        self.segmentation: SegmentationEngine | None = None
+        self.perception: PerceptionManager | None = None
+        self._current_perception: dict = {}
 
-    async def initialize(self):
+    async def initialize(self) -> None:
         from astrbot.api import logger
 
         os.makedirs(self.data_dir, exist_ok=True)
 
         # 数据迁移：旧路径 → 新路径（仅首次）
+        # 仅在 state.json 不存在时迁移，防止重复迁移覆盖已有数据
         old_data = os.path.join(self.plugin_dir, "data")
         if os.path.isdir(old_data) and old_data != self.data_dir:
             if not os.path.isfile(os.path.join(self.data_dir, "state.json")):
@@ -80,10 +87,12 @@ class CoreEngine:
 
         state_path = os.path.join(self.data_dir, "state.json")
         owner_id = self.config.owner.qq_id
+        # 运行时状态是全局唯一的，所有模块都读同一份 state，不各自保存副本
         self.state = RuntimeState.load(state_path, owner_id, self.config.familiarity.owner_baseline)
 
         mem_path = os.path.join(self.data_dir, "memory.json")
         mc = self.config.memory
+        # 将 frozen dataclass 打平成普通 dict，兼容 MemoryManager 的初始化接口
         mem_cfg = {
             "deep_pool_size": mc.deep_pool_size, "core_limit": mc.core_limit,
             "decay_rates": mc.decay_rates, "intensity_decay_mod": mc.intensity_decay_mod,
