@@ -59,7 +59,7 @@ class PerceptionManager:
         if not self.enabled or not self.aggregator:
             return
         self._running = True
-        interval = self.config.perception.interval
+        interval = max(60, self.config.perception.interval)  # 最少 60 秒，防死循环
         active = [n for n, m in (
             ("idle",True),("late_night",True),("process",self.process),
             ("media",self.media),("session",self.session),

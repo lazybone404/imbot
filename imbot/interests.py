@@ -2,6 +2,7 @@
 兴趣池 — imbot 的好奇心引擎。
 独立于感知/记忆系统，管理兴趣的捕获、衰减、探索和分享。
 """
+import asyncio
 import json
 import os
 import random
@@ -337,15 +338,15 @@ class InterestPool:
             "\n\n从中提取 1-2 个兴趣关键词，每个 2-8 字。只输出关键词，用换行分隔。不要输出其他内容。"
         )
 
+        task = asyncio.create_task(self._llm_call(prompt))
         try:
-            result = await asyncio.wait_for(self._llm_call(prompt), timeout=5.0)
+            result = await asyncio.wait_for(task, timeout=5.0)
             if not result:
                 return []
             keywords = [k.strip() for k in result.strip().split("\n") if k.strip()]
             return keywords[:2]
-        except asyncio.TimeoutError:
-            return []
-        except Exception:
+        except (asyncio.TimeoutError, Exception):
+            task.cancel()
             return []
 
     # ── 心跳 ──

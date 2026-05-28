@@ -103,11 +103,11 @@ def atomic_write_json(path: str, data) -> None:
 
 
 async def call_lightweight_llm(engine, prompt: str, timeout: float = 5.0) -> str:
-    """调用轻量 LLM，超时或失败返回空字符串。"""
+    """调用轻量 LLM，超时或失败返回空字符串。超时后取消后台 task 防止资源泄漏。"""
+    task = asyncio.create_task(engine._llm_generate_lightweight(prompt))
     try:
-        result = await asyncio.wait_for(
-            engine._llm_generate_lightweight(prompt), timeout=timeout
-        )
+        result = await asyncio.wait_for(task, timeout=timeout)
         return result or ""
     except (asyncio.TimeoutError, Exception):
+        task.cancel()
         return ""

@@ -60,14 +60,14 @@ class Secretary:
             '输出 JSON：{"should_respond": bool, "tone": "随大流/凑热闹/接梗/短促回应/认真接话/关心/吐槽/冷淡", "reason": "一句话理由"}'
         )
 
+        task = asyncio.ensure_future(context["_llm_call"](prompt))
         try:
-            result = await asyncio.wait_for(
-                context["_llm_call"](prompt), timeout=5.0
-            )
+            result = await asyncio.wait_for(task, timeout=5.0)
             if not result:
                 return None
             return self._parse_response(result)
         except asyncio.TimeoutError:
+            task.cancel()
             logger.warning("秘书模型超时，降级到纯动机判断")
             return None
         except Exception:
