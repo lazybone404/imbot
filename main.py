@@ -20,7 +20,7 @@ from imbot.engine import CoreEngine
 
 
 @register("imbot", "imbot_dev",
-          "寄居于你电脑里的存在——有脾气、有记忆、活在时间里",
+          "有情绪、有记忆的 QQ 机器人。能感知你在打游戏、听歌还是熬夜，会在合适的时候主动找你聊天。",
           "0.1.0", "")
 class ImbotPlugin(Star):
     def __init__(self, context: Context, config: "AstrBotConfig" = None):
